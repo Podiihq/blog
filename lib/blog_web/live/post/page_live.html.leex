@@ -1,0 +1,10 @@
+<%= if @posts do %>
+<%= for post <- @posts do %>
+  <h1> <%= post.title %> </h1>
+  <p> Author: <%= post.author %> </p>
+  <b> <%= Enum.join(post.tags, ", ") %> </b>
+
+  <p> <%= raw post.description %> </p>
+  <%= live_redirect "Read", to: "/", class: "button" %>
+<% end %>
+<% end %>
