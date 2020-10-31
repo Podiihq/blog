@@ -18,6 +18,7 @@ defmodule BlogWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+    live "/blog/new", PostLive.New
     live "/blog/:id", PageLive, :show
   end
 

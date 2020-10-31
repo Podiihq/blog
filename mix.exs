@@ -38,7 +38,8 @@ defmodule Blog.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:nimble_publisher, "~> 0.1.0"},
-      {:makeup_elixir, ">= 0.0.0"}
+      {:makeup_elixir, ">= 0.0.0"},
+      {:earmark, "~> 1.4"}
     ]
   end
 
