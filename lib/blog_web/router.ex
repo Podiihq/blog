@@ -18,8 +18,8 @@ defmodule BlogWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
-    live "/blog/new", PostLive.New
-    live "/blog/:id", PageLive, :show
+    live "/post/new", PostLive.New
+    live "/post/:id", PageLive, :show
   end
 
   # Other scopes may use custom stacks.
