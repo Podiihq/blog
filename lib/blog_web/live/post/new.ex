@@ -33,17 +33,20 @@ defmodule BlogWeb.PostLive.New do
      assign(socket,
        title: "",
        content: @default_md,
-       post: build()
-     )}
+       valid_attrs: @default_attrs,
+       attrs: @default_attrs
+     )
+     |> build()}
   end
 
   def render(assigns) do
     ~L"""
     <div class="row">
     <div class="column">
-      <form phx-change="preview">
-      <input name="post-title" value="<%= @title %>" type="text">
+      <form phx-change="preview", phx-submit="save">
+      <input name="post-title" value="<%= @post.title |> String.downcase() |> String.replace(" ", "-") %>"  type="text">
       <textarea name="post-content" id="new-post"><%= @content %></textarea>
+      <button> Save </button>
       </form>
     </div>
     <div class="column">
@@ -58,27 +61,23 @@ defmodule BlogWeb.PostLive.New do
     """
   end
 
-  def handle_event("preview", %{"_target" => ["post-title"], "post-title" => title}, socket) do
+  def handle_event("save", _, socket) do
+    title = socket.assigns.post.title |> String.downcase()
     today = Date.utc_today()
     path = Path.join(Path.expand("."), ["posts", "/#{today.year}"])
-    filename = "#{today.month}-" <> String.pad_leading(today.day, 2, "0") <> "-#{title}"
+    filename = "#{today.month}-" <> String.pad_leading("#{today.day}", 2, "0") <> "-#{title}"
+    filename = String.replace(filename, " ", "-")
 
     {:ok, _res} =
-      File.open(path <> "/" <> filename <> ".md", [:append], fn file ->
+      File.open(path <> "/" <> filename <> ".md", [:read, :write], fn file ->
         IO.write(file, socket.assigns.content)
       end)
 
     {:noreply, socket}
   end
 
-  def handle_event("preview", %{"post-content" => content, "post-title" => title}, socket) do
-    {:noreply,
-     socket
-     |> assign(
-       content: content,
-       title: title,
-       post: build(content)
-     )}
+  def handle_event("preview", %{"post-content" => content}, socket) do
+    {:noreply, socket |> assign(content: content) |> build(content)}
   end
 
   defp markdown_to_html(md) do
@@ -86,20 +85,22 @@ defmodule BlogWeb.PostLive.New do
     NimblePublisher.Highlighter.highlight(html)
   end
 
-  defp build(content \\ @default_md) do
+  defp build(socket, content \\ @default_md) do
     [code, body] = :binary.split(content, ["\n---\n", "\r\n---\r\n"])
     body = markdown_to_html(body)
 
-    {%{} = attrs, _} =
+    socket =
       try do
-        Code.eval_string(code, [])
+        {%{} = attrs, _} = Code.eval_string(code, [])
+        socket |> assign(valid_attrs: attrs, attrs: attrs)
       rescue
         _ ->
-          Code.eval_string(@default_attrs, [])
+          {%{} = attrs, _} = Code.eval_string(@default_attrs, [])
+          socket |> assign(valid_attrs: socket.assigns.valid_attrs, attrs: attrs)
       end
 
     filename = "posts/2020/04-17-hello-world.md"
 
-    Blog.Post.build(filename, attrs, body)
+    socket |> assign(post: Blog.Post.build(filename, socket.assigns.valid_attrs, body))
   end
 end

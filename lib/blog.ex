@@ -25,6 +25,10 @@ defmodule Blog do
   def all_posts, do: @posts
   def all_tags, do: @tags
 
+  def draft_posts do
+    Enum.filter(all_posts(), & &1.draft)
+  end
+
   def get_post_by_id!(id) do
     Enum.find(all_posts(), &(&1.id == id)) ||
       raise NotFoundError, "post with id=#{id} not found"
